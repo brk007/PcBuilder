@@ -69,7 +69,7 @@ for row in lists:
         "MHZ": row["MHZ"],
         "Price:": row["Price"],
         }
-    posts = db.ramm
+    posts = db.ram
     post_id = posts.insert_one(informations).inserted_id
 
 
