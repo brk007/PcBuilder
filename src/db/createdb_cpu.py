@@ -1,4 +1,3 @@
-
 import os
 import csv
 import requests
@@ -6,7 +5,6 @@ from pymongo import MongoClient
 import json
 import re
 from selenium import webdriver
-from bs4 import BeautifulSoup
 from currency_converter import CurrencyConverter
 
 import sys

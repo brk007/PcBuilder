@@ -83,19 +83,18 @@ class Graph(QWidget):
         self.box2.clear()
         self.box2.setEnabled(False)
 
-        values = self.pcs
+        value = self.pcs[0]
         tooltip = ""
 
-        for value in values:
-            if text =="MOTHERBOARD":
-                text = "Motherboard"
+        if text =="MOTHERBOARD":
+            text = "Motherboard"
             
-            if not value[text] in self.bandict:
-                for keys in value[text]:
-                    if not keys in self.bandict:
-                        self.box2.addItem(keys)
-                        self.box2.setEnabled(True)
-  
+        if not value[text] in self.bandict:
+            for keys in value[text]:
+                if not keys in self.bandict:
+                    self.box2.addItem(keys)
+                    self.box2.setEnabled(True)
+
     def pull_bar_graph(self,text):
         self.sortindex = text
 
@@ -129,24 +128,31 @@ class Graph(QWidget):
         mydb = myclient["PcBuilder"]
         mycol = mydb[database]
 
-        print(sort_number)
-
         findervalue = mycol.find({"_id": finderindex})
-        if int(findervalue[0]["Rank"]) < 20:
-            itemrank = int(findervalue[0]["Rank"])
-            skipvalue =int(itemrank)
-            values = mycol.find({}, sort=[("Rank",1)]).limit(number)
 
-        elif int(findervalue[0]["Rank"])>=20 and int(findervalue[0]["Rank"]) < 60:
-            itemrank = int(findervalue[0]["Rank"])
-            skipvalue =int(itemrank-(number/2))
-            values = mycol.find({}, sort=[("Rank",1)]).limit(number).skip(skipvalue)
+        if self.database == "GPU":
+            finder_id_hex = int(str(finderindex),16)
+            first_id_index = mycol.find_one({})
+            first_id_hex = int(str(first_id_index["_id"]),16)
+            skipvalue = finder_id_hex-first_id_hex
+            values = mycol.find({}, sort=[("Rank",1)]).limit(number).skip(skipvalue-1)
 
-        elif int(findervalue[0]["Rank"])>=60:
-            itemrank = int(findervalue[0]["Rank"])
-            skipvalue = int(itemrank-(number))
-            values = mycol.find({}, sort=[("Rank",1)]).limit(number).skip(skipvalue)
+        else:              
+            if int(findervalue[0]["Rank"]) < 20:
+                itemrank = int(findervalue[0]["Rank"])
+                skipvalue =int(itemrank)
+                values = mycol.find({}, sort=[("Rank",1)]).limit(number)
 
+            elif int(findervalue[0]["Rank"])>=20 and int(findervalue[0]["Rank"]) < 60:
+                itemrank = int(findervalue[0]["Rank"])
+                skipvalue =int(itemrank-(number/2))
+                values = mycol.find({}, sort=[("Rank",1)]).limit(number).skip(skipvalue)
+
+            elif int(findervalue[0]["Rank"])>=60:
+                itemrank = int(findervalue[0]["Rank"])
+                skipvalue = int(itemrank-(number))
+                values = mycol.find({}, sort=[("Rank",1)]).limit(number).skip(skipvalue)
+    
         a=0 #for changing colors
         b=1 #counter
 
@@ -155,7 +161,7 @@ class Graph(QWidget):
         label_style = {'color': '#EEE', 'font-size': '14pt'}
         lbl1 = sortindex
         self.plot.setLabel("left", lbl1, **label_style)  
-        self.plot.setLabel("bottom", "Sıralama",**label_style)
+        self.plot.setLabel("bottom", "Ranking",**label_style)
 
         if(sort_number == 1):
             sort_values = sorted(values, key = lambda i: i[sortindex])
@@ -164,10 +170,8 @@ class Graph(QWidget):
 
         for value in sort_values:
 
-            
             y = float(value[sortindex])  
-
-            if value["Rank"] == findervalue[0]["Rank"]:
+            if value["_id"] == findervalue[0]["_id"]:
                 bg = pg.BarGraphItem(x=[b], height=y, width=0.3, brush='b')
                 self.plot.addItem(bg) 
 
@@ -235,7 +239,3 @@ def graph_builder(pcs):
     window = Graph(pcs, motherboard_id,ram_id,gpu_id,cpu_id,ssd_id,hdd_id)
     window.show()
     app.exec_()
-
-    
-        
-        
